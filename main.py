@@ -1,3 +1,4 @@
+#!/home/theorizchy/SmartCCTV-Camera/venv/bin/python
 
 from flask import Flask, render_template, Response, request
 from camera import VideoCamera

@@ -8,7 +8,7 @@ import face_recognition
 import cv2
 import numpy as np
 import os
-face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
+face_cascade=cv2.CascadeClassifier("/home/theorizchy/SmartCCTV-Camera/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_alt2.xml")
 ds_factor=0.6
 
 #Store objects in array
@@ -29,17 +29,10 @@ for file in os.listdir("profiles"):
         known_person.append(file.replace(".jpg", ""))
         file=os.path.join("profiles/", file)
         known_image = face_recognition.load_image_file(file)
-        #print("test")
-        #print(face_recognition.face_encodings(known_image)[0])
         known_face_encodings.append(face_recognition.face_encodings(known_image)[0])
-        #print(known_face_encodings)
 
     except Exception as e:
         pass
-    
-#print(len(known_face_encodings))
-#print(known_person)
-
 
 class VideoCamera(object):
     def __init__(self):
@@ -50,15 +43,17 @@ class VideoCamera(object):
     
     def get_frame(self):
         success, image = self.video.read()
-        
-        process_this_frame = True
-        
+        if success:
+            process_this_frame = True
             # Resize frame of video to 1/4 size for faster face recognition processing
-        small_frame = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
+            small_frame = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            #rgb_small_frame = small_frame[:, :, ::-1]
+            rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
+        else:
+            print('FAIL TO GET FRAME')
+            process_this_frame = False
 
-        # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
-        rgb_small_frame = small_frame[:, :, ::-1]
-        
        # Only process every other frame of video to save time
         if process_this_frame:
             # Find all the faces and face encodings in the current frame of video
@@ -66,29 +61,27 @@ class VideoCamera(object):
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
             global name_gui;
-            #face_names = []
             for face_encoding in face_encodings:
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
                 name = "Unknown"
                 
-                #print(face_encoding)
-                print(matches)
+                #print(matches)
 
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = known_person[best_match_index]
 
-                print(name)
+                if not 'Unknown':
+                    print(name)
                 #print(face_locations)
                 face_names.append(name)
         
                 name_gui = name
 
         process_this_frame = not process_this_frame
-            
-# Display the results
+        # Display the results
         for (top, right, bottom, left), name in zip(face_locations, face_names):
             # Scale back up face locations since the frame we detected in was scaled to 1/4 size
             top *= 4
