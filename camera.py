@@ -8,6 +8,8 @@ import face_recognition
 import cv2
 import numpy as np
 import os
+import time
+from mail import sendEmail
 face_cascade=cv2.CascadeClassifier("/home/theorizchy/SmartCCTV-Camera/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_alt2.xml")
 ds_factor=0.6
 
@@ -21,6 +23,10 @@ face_locations = []
 face_encodings = []
 face_names = []
 process_this_frame = True
+
+# Variable for email 
+last_epoch = 0
+email_update_interval = 600 # in seconds
 
 #Loop to add images in friends folder
 for file in os.listdir("profiles"):
@@ -60,7 +66,7 @@ class VideoCamera(object):
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-            global name_gui;
+            global name_gui
             for face_encoding in face_encodings:
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -72,9 +78,21 @@ class VideoCamera(object):
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = known_person[best_match_index]
-
-                if not 'Unknown':
-                    print(name)
+                else:
+                    global last_epoch
+                    try:
+                        if (time.time() - last_epoch) > email_update_interval:
+                            last_epoch = time.time()
+                            print("Sending email...")
+                            # Convert the OpenCV image to JPEG format
+                            ret, jpeg_image = cv2.imencode('.jpg', image)
+                            if ret != 1:
+                                print(f"Error in converting cv2 img: {ret}")
+                            else:
+                                sendEmail(jpeg_image.tobytes())
+                                print("done!")
+                    except Exception as e:
+                        print(f"Error sending email: {e}")
                 #print(face_locations)
                 face_names.append(name)
         

@@ -1,10 +1,15 @@
 #!/home/theorizchy/SmartCCTV-Camera/venv/bin/python
 from flask import Flask, render_template, Response, request, send_from_directory
 from camera import VideoCamera
-import time
 import os
+from flask_basicauth import BasicAuth
 
 app = Flask(__name__)
+app.config['BASIC_AUTH_USERNAME'] = 'admin'
+app.config['BASIC_AUTH_PASSWORD'] = 'password'
+app.config['BASIC_AUTH_FORCE'] = True
+
+basic_auth = BasicAuth(app)
 
 #background process happening without any refreshing
 @app.route('/left')
