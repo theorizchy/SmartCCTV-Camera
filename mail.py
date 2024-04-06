@@ -7,7 +7,7 @@ import time
 # Email you want to send the update from (only works with gmail)
 fromEmail = 'smartcctvp@gmail.com'
 # An app password here to avoid storing password in plain text
-fromEmailPassword = 'pfnzqbmdiehzurhl'
+fromEmailPassword = 'xhncobtyuigkckcy'
 
 # Email you want to send the update to
 toEmail = 'cleven.theorizchy@gmail.com'
